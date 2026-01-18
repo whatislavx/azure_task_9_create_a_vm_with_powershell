@@ -23,7 +23,7 @@ $SubnetConfig = Add-AzVirtualNetworkSubnetConfig -Name $SubnetName -AddressPrefi
 $VNet = Set-AzVirtualNetwork -VirtualNetwork $VNet
 $SubnetId = ($VNet.Subnets | Where-Object { $_.Name -eq $SubnetName }).Id
 
-$PublicIp = New-AzPublicIpAddress -Name $PublicIpName -ResourceGroupName $ResourceGroupName -Location $Location -AllocationMethod Static -Sku Standard
+$PublicIp = New-AzPublicIpAddress -Name $PublicIpName -ResourceGroupName $ResourceGroupName -Location $Location -AllocationMethod Static -Sku Standard -DomainNameLabel "$VmName-$ResourceGroupName"
 
 $SshKey = New-AzSshKey -Name $SshKeyName -ResourceGroupName $ResourceGroupName -PublicKey $SshKeyPublicKey
 
@@ -33,8 +33,7 @@ $VmConfig = New-AzVmConfig -VMName $VmName -VMSize $VmSize
 $VmConfig = Set-AzVMOperatingSystem -VM $VmConfig -Linux -ComputerName $VmName -DisablePasswordAuthentication
 $VmConfig = Set-AzVMSourceImage -VM $VmConfig -PublisherName "Canonical" -Offer "0001-com-ubuntu-server-jammy" -Skus "22_04-lts" -Version "latest"
 $VmConfig = Add-AzVMNetworkInterface -VM $VmConfig -Id $Nic.Id
-$VmConfig = Add-AzVMSshKey -VM $VmConfig -KeyData $SshKeyPublicKey -Path "/home/$AdminUsername/.ssh/authorized_keys"
 
-New-AzVm -ResourceGroupName $ResourceGroupName -Location $Location -VM $VmConfig
+New-AzVm -ResourceGroupName $ResourceGroupName -Location $Location -SshKeyName $SshKeyName -VM $VmConfig
 
 Write-Host "VM '$VmName' created successfully in resource group '$ResourceGroupName'."
